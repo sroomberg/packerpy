@@ -24,7 +24,7 @@ setuptools.setup(
         "examples",
         "exceptions",
         "models",
-        "test",
+        "tests",
         "util",
     ],
     install_requires=[
