@@ -7,6 +7,7 @@ from .exceptions import PackerClientError
 
 class PackerClient:
     def __init__(self, file, stream_file_dir=None, log=None):
+        PackerClient.verify_packer_installation()
         self.file = file
         self.stream_file_dir = stream_file_dir
         self.log = log or logging.getLogger(PackerClient.__name__)
@@ -53,4 +54,9 @@ class PackerClient:
             stream_file.close()
         return proc
 
-
+    @staticmethod
+    def verify_packer_installation():
+        try:
+            subprocess.check_call("packer version")
+        except subprocess.CalledProcessError:
+            raise EnvironmentError("Please install packer (https://developer.hashicorp.com/packer/downloads) before using this tool.")
