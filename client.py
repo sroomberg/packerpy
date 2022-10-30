@@ -51,5 +51,6 @@ class PackerClient:
         if stream_file:
             stream_file.write(proc.stdout.read())
             stream_file.close()
+        return proc
 
 
