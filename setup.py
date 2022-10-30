@@ -1,16 +1,4 @@
 import setuptools
-import subprocess
-
-from setuptools.command.develop import develop
-
-
-class VerifyPackerInstallation(develop):
-    def run(self):
-        try:
-            subprocess.check_call("packer version")
-        except subprocess.CalledProcessError:
-            raise EnvironmentError("Please install packer (https://developer.hashicorp.com/packer/downloads) before using this tool.")
-
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -42,7 +30,4 @@ setuptools.setup(
     install_requires=[
         'python-hcl2==3.0.5',
     ],
-    cmdclass={
-        "develop": VerifyPackerInstallation,
-    }
 )
