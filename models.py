@@ -11,10 +11,6 @@ from .util import *
 
 
 class SupportingType:
-    """
-    Keep this class separate from PackerResource in case SupportingType objects need to be extended in a way that
-    diverges from the pattern of PackerResource objects.
-    """
     def is_empty(self) -> bool:
         raise NotImplementedError
 
@@ -70,6 +66,9 @@ class PackerResource:
 
 
 class Plugin(PackerResource):
+    """
+    https://developer.hashicorp.com/packer/docs/templates/hcl_templates/blocks/packer#specifying-a-required-packer-version
+    """
     def __init__(self,
                  name,
                  version,
@@ -105,6 +104,9 @@ class Plugin(PackerResource):
 
 
 class Requirements(PackerResource):
+    """
+    https://developer.hashicorp.com/packer/docs/templates/hcl_templates/blocks/packer#specifying-a-required-packer-version
+    """
     def __init__(self):
         super(Requirements, self).__init__()
         self.plugins: list[Plugin] = []
@@ -156,6 +158,9 @@ class Requirements(PackerResource):
 
 
 class BuilderSourceConfig(PackerResource):
+    """
+    https://developer.hashicorp.com/packer/docs/templates/hcl_templates/blocks/build/source
+    """
     def __init__(self, _type, name):
         super(BuilderSourceConfig, self).__init__(_type=_type, name=name)
 
@@ -206,6 +211,9 @@ class EmptyBuilderSourceConfig(BuilderSourceConfig):
 
 
 class AmazonEbs(BuilderSourceConfig):
+    """
+    https://developer.hashicorp.com/packer/plugins/builders/amazon/ebs
+    """
     def __init__(self,
                  name,
                  ami_name,
@@ -279,6 +287,9 @@ class AmazonEbs(BuilderSourceConfig):
 
 
 class DockerBuilder(BuilderSourceConfig):
+    """
+    https://developer.hashicorp.com/packer/plugins/builders/docker
+    """
     def __init__(self,
                  name,
                  image,
@@ -328,6 +339,9 @@ class BuilderResource(PackerResource):
 
 
 class Provisioner(BuilderResource):
+    """
+    https://developer.hashicorp.com/packer/docs/templates/hcl_templates/blocks/build/provisioner
+    """
     def __init__(self, _type, **kwargs):
         super(Provisioner, self).__init__(_type)
         self.only: list = kwargs.get("only", [])
@@ -363,6 +377,9 @@ class EmptyProvisioner(Provisioner):
 
 
 class ShellProvisioner(Provisioner):
+    """
+    https://developer.hashicorp.com/packer/docs/provisioners/shell
+    """
     def __init__(self,
                  inline=None,
                  script=None,
@@ -381,6 +398,9 @@ class ShellProvisioner(Provisioner):
 
 
 class ShellLocalProvisioner(Provisioner):
+    """
+    https://developer.hashicorp.com/packer/docs/provisioners/shell-local
+    """
     def __init__(self,
                  command=None,
                  inline=None,
@@ -413,6 +433,9 @@ class ShellLocalProvisioner(Provisioner):
 
 
 class FileProvisioner(Provisioner):
+    """
+    https://developer.hashicorp.com/packer/docs/provisioners/file
+    """
     def __init__(self,
                  content=None,
                  source=None,
@@ -438,6 +461,9 @@ PROVISIONER_LOOKUP = {
 
 
 class PostProcessor(BuilderResource):
+    """
+    https://developer.hashicorp.com/packer/docs/post-processors
+    """
     def __init__(self, _type, **kwargs):
         super(PostProcessor, self).__init__(_type)
         self.only: list = kwargs.get("only", [])
@@ -479,12 +505,18 @@ class EmptyPostProcessor(PostProcessor):
 
 
 class Manifest(PostProcessor):
+    """
+    https://developer.hashicorp.com/packer/docs/post-processors/manifest
+    """
     def __init__(self, output):
         super(Manifest, self).__init__("manifest")
         self.output: str = output
 
 
 class DockerImport(PostProcessor):
+    """
+    https://developer.hashicorp.com/packer/plugins/post-processors/docker/docker-import
+    """
     def __init__(self, repository, **kwargs):
         super(DockerImport, self).__init__("docker-import", **kwargs)
         self.repository: str = repository
@@ -492,6 +524,9 @@ class DockerImport(PostProcessor):
 
 
 class DockerTag(PostProcessor):
+    """
+    https://developer.hashicorp.com/packer/plugins/post-processors/docker/docker-tag
+    """
     def __init__(self, repository, **kwargs):
         super(DockerTag, self).__init__("docker-tag", **kwargs)
         self.repository: str = repository
@@ -499,6 +534,9 @@ class DockerTag(PostProcessor):
 
 
 class DockerPush(PostProcessor):
+    """
+    https://developer.hashicorp.com/packer/plugins/post-processors/docker/docker-push
+    """
     def __init__(self, **kwargs):
         super(DockerPush, self).__init__("docker-push", **kwargs)
         self.ecr_login: bool = kwargs.get("ecr_login", None)
@@ -530,6 +568,9 @@ POST_PROCESSOR_LOOKUP = {
 
 
 class Builder(PackerResource):
+    """
+    https://developer.hashicorp.com/packer/docs/templates/hcl_templates/blocks/build
+    """
     def __init__(self, name):
         super(Builder, self).__init__(name=name)
         self.sources: list[str] = []

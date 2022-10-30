@@ -24,6 +24,7 @@ class PackerBuilder:
             if isinstance(post_processor, Manifest):
                 return post_processor.output
         self.config.builder.add_post_processor(Manifest(self.manifest_file))
+        return self.manifest_file
 
     def configure(self):
         raise NotImplementedError
@@ -31,6 +32,8 @@ class PackerBuilder:
     def build(self):
         self.add_manifest_post_processor()
         self.client.run("init")
+        if self.client.run("validate").returncode != 0:
+            raise PackerBuildError("Invalid packer template")
         self.client.run("build")
         self.log.info(f"Checking manifest {self.manifest_file} for created artifact(s)")
         if not self.artifact_exists():

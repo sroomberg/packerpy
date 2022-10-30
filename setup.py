@@ -19,10 +19,12 @@ setuptools.setup(
     ],
     python_requires='>=3.8',
     packages=[
+        "builder",
         "client",
         "exceptions",
         "models",
-        "utils",
+        "test",
+        "util",
     ],
     install_requires=[
         'python-hcl2==3.0.5',
