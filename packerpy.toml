@@ -6,4 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "packerpy"
 readme = "README.md"
 requires_python = ">=3.8"
-
+license = {text = "BSD 2-Clause License"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
