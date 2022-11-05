@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="PackerBuilder",
-    version="1.0.0",
+    version="1.0.1",
     author="sroomberg",
     author_email="stevenroomberg@gmail.com",
     description="Packer for python",

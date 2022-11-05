@@ -1,6 +1,6 @@
 import unittest
 
-from ..models import *
+from ..src.models import *
 
 
 class BasePackerTest(unittest.TestCase):
