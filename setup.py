@@ -8,7 +8,6 @@ setuptools.setup(
     version="1.0.0",
     author="sroomberg",
     author_email="stevenroomberg@gmail.com",
-    license="License :: OSI Approved :: GNU General Public License (GPL)",
     description="Packer for python",
     long_description=long_description,
     long_description_content_type="text/markdown",
