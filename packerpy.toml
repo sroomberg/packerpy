@@ -8,6 +8,7 @@ readme = "README.md"
 requires_python = ">=3.8"
 
 [metadata]
+url = ""
 license = "BSD 3-Clause License"
 classifiers = [
     "License :: OSI Approved :: BSD License",
