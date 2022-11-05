@@ -12,9 +12,10 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/sroomberg/packerpy",
+    license="BSD 3-Clause License",
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: Apache 2.0",
+        "License :: OSI Approved :: BSD License",
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.8',
