@@ -18,15 +18,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.8',
-    packages=[
-        "builder",
-        "client",
-        "examples",
-        "exceptions",
-        "models",
-        "tests",
-        "util",
-    ],
+    packages=setuptools.find_packages(),
     install_requires=[
         'python-hcl2==3.0.5',
     ],
