@@ -6,8 +6,10 @@ build-backend = "setuptools.build_meta"
 name = "packerpy"
 readme = "README.md"
 requires_python = ">=3.8"
-license = {text = "License :: OSI Approved :: GNU General Public License (GPL)"}
+
+[metadata]
+license = "BSD 3-Clause License"
 classifiers = [
+    "License :: OSI Approved :: BSD License",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: GNU General Public License (GPL)"
 ]
