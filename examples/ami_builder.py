@@ -1,7 +1,7 @@
 import os
 
-from ..src.builder import PackerBuilder
-from ..src.models import *
+from packerpy.builder import PackerBuilder
+from packerpy.models import *
 
 
 class AmiBuilder(PackerBuilder):
