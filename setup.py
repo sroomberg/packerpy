@@ -23,4 +23,5 @@ setuptools.setup(
     install_requires=[
         'python-hcl2==3.0.5',
     ],
+    test_suite="tests",
 )
