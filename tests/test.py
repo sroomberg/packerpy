@@ -1,6 +1,6 @@
 import unittest
 
-from ..src.models import *
+from packerpy.models import *
 
 
 class BasePackerTest(unittest.TestCase):

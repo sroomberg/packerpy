@@ -19,12 +19,12 @@ the code from packer's `golang` [implementation](https://github.com/hashicorp/pa
 
 ### Documentation
 
-[`PackerBuilder`](./src/builder.py): This class is extendable (as shown in 
+[`PackerBuilder`](packerpy/builder.py): This class is extendable (as shown in 
 [`packerpy.examples.ami_builder`](./examples/ami_builder.py)) in order to allow for a custom implementation 
 of any packer builder plugin. The `PackerBuilder` will generate a json packer configuration file that can 
 be executed by the packer cli.
 
-[`PackerClient`](./src/client.py): This is a utility class built to interact with the packer cli.
+[`PackerClient`](packerpy/client.py): This is a utility class built to interact with the packer cli.
 
-[`models`](./src/models.py): The `models` submodule contains objects that map to packer config blocks in the 
+[`models`](packerpy/models.py): The `models` submodule contains objects that map to packer config blocks in the 
 `.pkr.json` file that gets generated.
