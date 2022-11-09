@@ -53,7 +53,7 @@ class TestPackerResource(BasePackerTest):
     @unittest.expectedFailure
     def test_inclusive_inputs_without_values(self):
         with self.assertRaises(ValueError):
-            PackerResource.check_exclusive_inputs(a="", b=None, c=[], d={}, e=False)
+            PackerResource.check_inclusive_inputs(a="", b=None, c=[], d={}, e=False)
 
     def test_inclusive_inputs_failure(self):
         with self.assertRaises(ValueError):
@@ -93,7 +93,7 @@ class TestPlugin(BasePackerTest):
             "source": "github.com/user/repo",
         }
         self.assertEqual(Plugin.load_plugin("test_plugin", plugin_json),
-                         Plugin("test_plugin", "1.0.6", "=", "github.com/user/repo"))
+                         Plugin("test_plugin", "1.0.6", ">", "github.com/user/repo"))
 
 
 class TestRequirements(BasePackerTest):
@@ -224,7 +224,6 @@ class TestBuilderSourceConfig(BasePackerTest):
                         "device_name": "some-device",
                         "encrypted": False,
                     },
-                    "skip_region_validation": True,
                 }
             }
         })
@@ -309,7 +308,7 @@ class TestProvisioner(BasePackerTest):
         )
 
     def test_load_provisioner(self):
-        provisioner_json = {"type": "test_type"}
+        provisioner_json = {"_type": "test_type"}
         self.assertEqual(Provisioner.load_provisioner(provisioner_json), Provisioner("test_type"))
 
 
@@ -437,7 +436,7 @@ class TestPackerConfig(BasePackerTest):
                 },
                 {
                     "test_bsc_type_2": {
-                        "test_bsc_type_2": {}
+                        "test_bsc_name_2": {}
                     }
                 }
             ],
