@@ -140,7 +140,7 @@ class Requirements(PackerResource):
 
     @staticmethod
     def version_match(version):
-        match = re.match(r"([<>=]{1,2})\s*([\d.])*", version)
+        match = re.match(r"([<>=]{1,2})\s*([\d.]*)", version)
         if not match:
             raise PackerBuildError(f"Invalid version '{version}' - must match pattern " + r"([<>=]{1,2})\s*([\d.])*")
         return match
@@ -362,7 +362,7 @@ class Provisioner(BuilderResource):
     @classmethod
     def load_provisioner(cls, content: dict):
         PackerResource.transform_type_key(content)
-        return cls(content)
+        return cls(**content)
 
 
 class EmptyProvisioner(Provisioner):
