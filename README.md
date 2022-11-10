@@ -14,7 +14,7 @@ the code from packer's `golang` [implementation](https://github.com/hashicorp/pa
 
 ### Installation
 
-`pip install PackerBuilder` ([PyPi](https://pypi.org/project/PackerBuilder/1.0.0/))
+`pip install PackerBuilder` ([PyPi](https://pypi.org/project/PackerBuilder/))
 
 
 ### Documentation
