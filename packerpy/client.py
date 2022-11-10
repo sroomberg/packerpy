@@ -41,7 +41,7 @@ class PackerClient:
         else:
             stream_file = None
         proc = subprocess.Popen(
-            command,
+            cmd,
             universal_newlines=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
