@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PackerBuilder"
-version = "2.0.1"
+version = "2.0.2"
 description = "Packer for python"
 readme = "README.md"
 license = "BSD-3-Clause"
