@@ -134,7 +134,6 @@ class Plugin(PackerResource):
 
     def __init__(self, name: str, version: str, version_op: str, source: str) -> None:
         super().__init__(name=name)
-        self.name: str = name
         self.version: str = version
         self.version_op: str = version_op
         self.source: str = source
