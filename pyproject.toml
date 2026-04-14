@@ -1,10 +1,12 @@
 [build-system]
-requires = ["setuptools>=68.0"]
+requires = [
+    "setuptools>=68.0",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "PackerBuilder"
-version = "2.0.0"
+version = "2.0.1"
 description = "Packer for python"
 readme = "README.md"
 license = "BSD-3-Clause"
@@ -25,7 +27,9 @@ Homepage = "https://github.com/sroomberg/packerpy"
 Repository = "https://github.com/sroomberg/packerpy"
 
 [tool.setuptools.packages.find]
-include = ["packerpy*"]
+include = [
+    "packerpy*",
+]
 
 [tool.ruff]
 target-version = "py310"
@@ -33,8 +37,8 @@ line-length = 120
 
 [tool.ruff.lint]
 select = [
-    "E",   # pycodestyle errors
-    "F",   # pyflakes
-    "I",   # isort
-    "W",   # pycodestyle warnings
+    "E",
+    "F",
+    "I",
+    "W",
 ]
