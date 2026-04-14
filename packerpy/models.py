@@ -32,7 +32,7 @@ class SupportingType:
         """Return ``True`` if this object carries no meaningful configuration."""
         raise NotImplementedError
 
-    def json(self) -> dict[str, Any]:
+    def json(self) -> dict[str, Any] | list[Any]:
         """Return the Packer JSON representation of this object."""
         raise NotImplementedError
 
