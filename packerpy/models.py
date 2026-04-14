@@ -15,6 +15,7 @@ from platform import machine
 from typing import Any
 
 import hcl2
+from typing_extensions import override
 
 from .exceptions import PackerBuildError, raise_
 from .util import parse_list
@@ -138,6 +139,7 @@ class Plugin(PackerResource):
         self.version_op: str = version_op
         self.source: str = source
 
+    @override
     def json(self) -> dict[str, Any]:
         return {
             self.name: {
@@ -146,6 +148,7 @@ class Plugin(PackerResource):
             }
         }
 
+    @override
     def is_empty(self) -> bool:
         return not all((self.name, self.version, self.version_op, self.source))
 
@@ -183,9 +186,11 @@ class Requirements(PackerResource):
         Requirements.version_match(version_constraint)
         self.version_constraint = version_constraint
 
+    @override
     def is_empty(self) -> bool:
         return not any((self.plugins, self.version_constraint))
 
+    @override
     def json(self) -> dict[str, Any]:
         if self.is_empty():
             return {}
@@ -253,9 +258,11 @@ class BuilderSourceConfig(PackerResource):
     def __str__(self) -> str:
         return f"source.{self.type}.{self.name}"
 
+    @override
     def json(self) -> dict[str, Any]:
         return {self.type: {self.name: PackerResource.all_defined_items(self.__dict__, "type", "name")}}
 
+    @override
     def is_empty(self) -> bool:
         return not any((self.type, self.name))
 
@@ -286,9 +293,11 @@ class EmptyBuilderSourceConfig(BuilderSourceConfig):
     def __hash__(self) -> int:
         return id(self)
 
+    @override
     def __eq__(self, other: object) -> bool:
         return True
 
+    @override
     def is_empty(self) -> bool:
         return True
 
@@ -370,9 +379,11 @@ class AmazonEbs(BuilderSourceConfig):
             self.volume_size: int | None = kwargs.get("volume_size", None)
             self.kms_key_id: str | None = kwargs.get("kms_key_id", None)
 
+        @override
         def is_empty(self) -> bool:
             return not self.__dict__
 
+        @override
         def json(self) -> list[dict[str, Any]]:
             return [PackerResource.all_defined_items(self.__dict__)]
 
@@ -395,9 +406,11 @@ class AmazonEbs(BuilderSourceConfig):
             self.filters: dict[str, str] = filters
             self.most_recent: bool = most_recent
 
+        @override
         def is_empty(self) -> bool:
             return not any(self.__dict__.values())
 
+        @override
         def json(self) -> dict[str, Any]:
             return PackerResource.all_defined_items(self.__dict__)
 
@@ -474,9 +487,11 @@ class BuilderResource(PackerResource):
     def __init__(self, _type: str) -> None:
         super().__init__(_type=_type)
 
+    @override
     def json(self) -> dict[str, Any]:
         return PackerResource.all_defined_items(self.__dict__)
 
+    @override
     def is_empty(self) -> bool:
         return not PackerResource.all_defined_items(self.__dict__, "type")
 
@@ -526,6 +541,7 @@ class EmptyProvisioner(Provisioner):
     def __hash__(self) -> int:
         return id(self)
 
+    @override
     def __eq__(self, other: object) -> bool:
         return True
 
@@ -699,6 +715,7 @@ class EmptyPostProcessor(PostProcessor):
     def __hash__(self) -> int:
         return id(self)
 
+    @override
     def __eq__(self, other: object) -> bool:
         return True
 
@@ -814,6 +831,7 @@ class Builder(PackerResource):
         self.provisioners: list[Provisioner] = []
         self.post_processors: list[PostProcessor] = []
 
+    @override
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Builder):
             return NotImplemented
@@ -831,6 +849,7 @@ class Builder(PackerResource):
         """Append post-processors to the build's post-processor list."""
         self.post_processors.extend(post_processors)
 
+    @override
     def json(self) -> dict[str, Any]:
         ret: dict[str, Any] = {
             "build": [
@@ -846,6 +865,7 @@ class Builder(PackerResource):
             ret["build"][0].update(PostProcessor.merge_post_processor_json(*self.post_processors))
         return ret
 
+    @override
     def is_empty(self) -> bool:
         return not any((self.sources, self.provisioners, self.post_processors))
 
