@@ -1,5 +1,7 @@
 import os
 
+from typing_extensions import override
+
 from packerpy.builder import PackerBuilder
 from packerpy.models import AmazonEbs, FileProvisioner, ShellProvisioner
 
@@ -8,6 +10,7 @@ class AmiBuilder(PackerBuilder):
     def __init__(self):
         super(AmiBuilder, self).__init__("packer-ami")
 
+    @override
     def configure(self):
         builder_source_config = AmazonEbs(
             name="packer-ami",
