@@ -1,7 +1,7 @@
 import os
 
 from packerpy.builder import PackerBuilder
-from packerpy.models import *
+from packerpy.models import AmazonEbs, FileProvisioner, ShellProvisioner
 
 
 class AmiBuilder(PackerBuilder):
@@ -18,16 +18,12 @@ class AmiBuilder(PackerBuilder):
             source_ami=os.environ.get("SOURCE_AMI"),
             launch_block_device_mappings=AmazonEbs.LaunchBlockDeviceMappings(
                 delete_on_termination=False,
-            )
+            ),
         )
         self.config.add_builder_source(builder_source_config)
-        self.config.builder.add_provisioner(FileProvisioner( # REPLACEME
-            source="boot.sh",
-            destination="/opt/boot.sh"
-        ))
-        self.config.builder.add_provisioner(ShellProvisioner(
-            inline=["chmod", "+X", "/opt/boot.sh"]
-        ))
-
-
-
+        self.config.builder.add_provisioner(
+            FileProvisioner(  # REPLACEME
+                source="boot.sh", destination="/opt/boot.sh"
+            )
+        )
+        self.config.builder.add_provisioner(ShellProvisioner(inline=["chmod", "+X", "/opt/boot.sh"]))

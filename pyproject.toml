@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68.0", "setuptools-scm>=8.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PackerBuilder"
+version = "1.0.4"
+description = "Packer for python"
+readme = "README.md"
+license = "BSD-3-Clause"
+requires-python = ">=3.8"
+authors = [
+    { name = "sroomberg", email = "stevenroomberg@gmail.com" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "python-hcl2~=3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/sroomberg/packerpy"
+Repository = "https://github.com/sroomberg/packerpy"
+
+[tool.setuptools.packages.find]
+include = ["packerpy*"]
+
+[tool.ruff]
+target-version = "py38"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "W",   # pycodestyle warnings
+]
