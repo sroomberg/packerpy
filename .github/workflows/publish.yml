@@ -2,8 +2,8 @@ name: Publish to PyPI
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - master
 
 permissions:
   contents: read
@@ -19,10 +19,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check if tag is on master
+      - name: Check if commit has a version tag
         id: verify
         run: |
-          if git merge-base --is-ancestor ${{ github.sha }} origin/master; then
+          TAG=$(git tag --points-at HEAD | grep -E '^v[0-9]' | head -n1)
+          if [ -n "$TAG" ]; then
             echo "on_master=true" >> $GITHUB_OUTPUT
           else
             echo "on_master=false" >> $GITHUB_OUTPUT
