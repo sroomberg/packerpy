@@ -15,7 +15,6 @@ from platform import machine
 from typing import Any
 
 import hcl2
-from typing_extensions import override
 
 from .exceptions import PackerBuildError, raise_
 from .util import parse_list

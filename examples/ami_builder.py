@@ -1,7 +1,5 @@
 import os
 
-from typing_extensions import override
-
 from packerpy.builder import PackerBuilder
 from packerpy.models import AmazonEbs, FileProvisioner, ShellProvisioner
 
