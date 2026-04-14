@@ -59,4 +59,6 @@ class PackerClient:
         try:
             subprocess.check_call("packer version")
         except subprocess.CalledProcessError:
-            raise EnvironmentError("Please install packer (https://developer.hashicorp.com/packer/downloads) before using this tool.")
+            raise EnvironmentError(
+                "Please install packer (https://developer.hashicorp.com/packer/downloads) before using this tool."
+            )

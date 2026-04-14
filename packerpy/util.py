@@ -1,4 +1,3 @@
-
 def parse_list(raw, delimiter=","):
     if isinstance(raw, list):
         return raw

@@ -1,6 +1,21 @@
 import unittest
 
-from packerpy.models import *
+from packerpy.exceptions import PackerBuildError
+from packerpy.models import (
+    AmazonEbs,
+    Builder,
+    BuilderResource,
+    BuilderSourceConfig,
+    EmptyBuilderSourceConfig,
+    EmptyPostProcessor,
+    EmptyProvisioner,
+    PackerConfig,
+    PackerResource,
+    Plugin,
+    PostProcessor,
+    Provisioner,
+    Requirements,
+)
 
 
 class BasePackerTest(unittest.TestCase):
@@ -77,12 +92,15 @@ class TestPlugin(BasePackerTest):
         self.plugin = Plugin("test", "test_version", "=", "test_source")
 
     def test_json(self):
-        self.assertDictEqual(self.plugin.json(), {
-            "test": {
-                "version": "= test_version",
-                "source": "test_source",
-            }
-        })
+        self.assertDictEqual(
+            self.plugin.json(),
+            {
+                "test": {
+                    "version": "= test_version",
+                    "source": "test_source",
+                }
+            },
+        )
 
     def test_is_empty(self):
         self.assertFalse(self.plugin.is_empty())
@@ -92,8 +110,9 @@ class TestPlugin(BasePackerTest):
             "version": "> 1.0.6",
             "source": "github.com/user/repo",
         }
-        self.assertEqual(Plugin.load_plugin("test_plugin", plugin_json),
-                         Plugin("test_plugin", "1.0.6", ">", "github.com/user/repo"))
+        self.assertEqual(
+            Plugin.load_plugin("test_plugin", plugin_json), Plugin("test_plugin", "1.0.6", ">", "github.com/user/repo")
+        )
 
 
 class TestRequirements(BasePackerTest):
@@ -105,41 +124,50 @@ class TestRequirements(BasePackerTest):
 
     def test_json_1(self):
         self.requirements.set_version_constraint(">=1")
-        self.assertDictEqual(self.requirements.json(), {
-            "packer": [
-                {
-                    "required_version": self.requirements.version_constraint,
-                }
-            ]
-        })
+        self.assertDictEqual(
+            self.requirements.json(),
+            {
+                "packer": [
+                    {
+                        "required_version": self.requirements.version_constraint,
+                    }
+                ]
+            },
+        )
 
     def test_json_2(self):
         plugin = Plugin("test", "1", ">", "test_source")
         self.requirements.add_plugin(plugin)
-        self.assertDictEqual(self.requirements.json(), {
-            "packer": [
-                {
-                    "required_plugins": [
-                        plugin.json(),
-                    ],
-                },
-            ],
-        })
+        self.assertDictEqual(
+            self.requirements.json(),
+            {
+                "packer": [
+                    {
+                        "required_plugins": [
+                            plugin.json(),
+                        ],
+                    },
+                ],
+            },
+        )
 
     def test_json_3(self):
         plugin = Plugin("test", "1", ">", "test_source")
         self.requirements.add_plugin(plugin)
         self.requirements.set_version_constraint(">=1.0.1")
-        self.assertDictEqual(self.requirements.json(), {
-            "packer": [
-                {
-                    "required_version": self.requirements.version_constraint,
-                    "required_plugins": [
-                        plugin.json(),
-                    ]
-                }
-            ]
-        })
+        self.assertDictEqual(
+            self.requirements.json(),
+            {
+                "packer": [
+                    {
+                        "required_version": self.requirements.version_constraint,
+                        "required_plugins": [
+                            plugin.json(),
+                        ],
+                    }
+                ]
+            },
+        )
 
     def test_valid_version_1(self):
         match = Requirements.version_match("> 1.0.1")
@@ -175,7 +203,7 @@ class TestRequirements(BasePackerTest):
                                 "source": "github.com/user/repo",
                             }
                         }
-                    ]
+                    ],
                 }
             ]
         }
@@ -195,58 +223,61 @@ class TestBuilderSourceConfig(BasePackerTest):
         self.assertEqual(str(self.builder_source), "source.test_type.test_name")
 
     def test_json(self):
-        self.assertDictEqual(self.builder_source.json(), {
-            "test_type": {
-                "test_name": {}
-            }
-        })
+        self.assertDictEqual(self.builder_source.json(), {"test_type": {"test_name": {}}})
 
     def test_json_with_supporting_type(self):
-        amazon_builder = AmazonEbs("amazon-ami",
-                                   "ami-name",
-                                   "us-east-1",
-                                   "test-key",
-                                   "test-secret",
-                                   launch_block_device_mappings={
-                                       "delete_on_termination": True,
-                                       "device_name": "some-device",
-                                       "encrypted": False,
-                                   })
-        self.assertDictEqual(amazon_builder.json(), {
-            "amazon-ebs": {
-                "amazon-ami": {
-                    "ami_name": "ami-name",
-                    "region": "us-east-1",
-                    "access_key": "test-key",
-                    "secret_key": "test-secret",
-                    "launch_block_device_mappings": {
-                        "delete_on_termination": True,
-                        "device_name": "some-device",
-                        "encrypted": False,
-                    },
+        amazon_builder = AmazonEbs(
+            "amazon-ami",
+            "ami-name",
+            "us-east-1",
+            "test-key",
+            "test-secret",
+            launch_block_device_mappings={
+                "delete_on_termination": True,
+                "device_name": "some-device",
+                "encrypted": False,
+            },
+        )
+        self.assertDictEqual(
+            amazon_builder.json(),
+            {
+                "amazon-ebs": {
+                    "amazon-ami": {
+                        "ami_name": "ami-name",
+                        "region": "us-east-1",
+                        "access_key": "test-key",
+                        "secret_key": "test-secret",
+                        "launch_block_device_mappings": {
+                            "delete_on_termination": True,
+                            "device_name": "some-device",
+                            "encrypted": False,
+                        },
+                    }
                 }
-            }
-        })
+            },
+        )
 
     def test_is_empty(self):
         self.assertFalse(self.builder_source.is_empty())
 
     def test_merge_builder_source_json(self):
-        builder_sources = [
-            self.builder_source,
-            BuilderSourceConfig("test_type_2", "test_name_2")
-        ]
-        self.assertDictEqual(BuilderSourceConfig.merge_builder_source_json(*builder_sources),
-                             {"source": [builder_source.json() for builder_source in builder_sources]})
+        builder_sources = [self.builder_source, BuilderSourceConfig("test_type_2", "test_name_2")]
+        self.assertDictEqual(
+            BuilderSourceConfig.merge_builder_source_json(*builder_sources),
+            {"source": [builder_source.json() for builder_source in builder_sources]},
+        )
 
     def test_load_builder_source_config_empty(self):
-        self.assertDictEqual(BuilderSourceConfig.load_builder_source_config({}).json(),
-                             EmptyBuilderSourceConfig().json())
+        self.assertDictEqual(
+            BuilderSourceConfig.load_builder_source_config({}).json(), EmptyBuilderSourceConfig().json()
+        )
 
     def test_load_builder_source_config(self):
         builder_source_json = {"test_name": {"type": "test_type"}}
-        self.assertDictEqual(BuilderSourceConfig.load_builder_source_config(builder_source_json).json(),
-                             BuilderSourceConfig("test_type", "test_name").json())
+        self.assertDictEqual(
+            BuilderSourceConfig.load_builder_source_config(builder_source_json).json(),
+            BuilderSourceConfig("test_type", "test_name").json(),
+        )
 
 
 class TestBuilderResource(BasePackerTest):
@@ -266,35 +297,35 @@ class TestProvisioner(BasePackerTest):
 
     def test_json_with_only(self):
         self.provisioner.add_only_sources(BuilderSourceConfig("test_type", "test_name"))
-        self.assertDictEqual(Provisioner.merge_provisioner_json(self.provisioner), {
-            "provisioner": [
-                {
-                    "test_provisioner": {
-                        "only": ["test_type.test_name"]
-                    }
-                }
-            ]
-        })
+        self.assertDictEqual(
+            Provisioner.merge_provisioner_json(self.provisioner),
+            {"provisioner": [{"test_provisioner": {"only": ["test_type.test_name"]}}]},
+        )
 
     def test_json_with_multiple_only(self):
-        self.provisioner.add_only_sources(BuilderSourceConfig("test_type", "test_name"),
-                                          BuilderSourceConfig("test_type_2", "test_name_2"))
-        self.assertDictEqual(Provisioner.merge_provisioner_json(self.provisioner), {
-            "provisioner": [
-                {
-                    "test_provisioner": {
-                        "only": [
-                            "test_type.test_name",
-                            "test_type_2.test_name_2",
-                        ]
+        self.provisioner.add_only_sources(
+            BuilderSourceConfig("test_type", "test_name"), BuilderSourceConfig("test_type_2", "test_name_2")
+        )
+        self.assertDictEqual(
+            Provisioner.merge_provisioner_json(self.provisioner),
+            {
+                "provisioner": [
+                    {
+                        "test_provisioner": {
+                            "only": [
+                                "test_type.test_name",
+                                "test_type_2.test_name_2",
+                            ]
+                        }
                     }
-                }
-            ]
-        })
+                ]
+            },
+        )
 
     def test_json_without_only(self):
-        self.assertDictEqual(Provisioner.merge_provisioner_json(self.provisioner),
-                             {"provisioner": [{"test_provisioner": {}}]})
+        self.assertDictEqual(
+            Provisioner.merge_provisioner_json(self.provisioner), {"provisioner": [{"test_provisioner": {}}]}
+        )
 
     def test_merge_provisioner_json(self):
         self.assertDictEqual(
@@ -304,7 +335,7 @@ class TestProvisioner(BasePackerTest):
                     {"test_provisioner": {}},
                     {"test_provisioner_2": {}},
                 ]
-            }
+            },
         )
 
     def test_load_provisioner(self):
@@ -325,7 +356,7 @@ class TestPostProcessor(BasePackerTest):
                         }
                     }
                 ]
-            }
+            },
         )
 
     def test_load_post_processor(self):
@@ -343,26 +374,19 @@ class TestBuilder(BasePackerTest):
         self.assertFalse(self.builder.is_empty())
 
     def test_json(self):
-        self.assertDictEqual(self.builder.json(), {
-            "build": [
-                {
-                    "name": "test_builder",
-                    "sources": ["source.builder_source_type.builder_source_name"],
-                    "provisioner": [
-                        {
-                            "test_provisioner": {}
-                        }
-                    ],
-                    "post-processors": [
-                        {
-                            "post-processor": {
-                                "test_post_processor": [{}]
-                            }
-                        }
-                    ]
-                }
-            ]
-        })
+        self.assertDictEqual(
+            self.builder.json(),
+            {
+                "build": [
+                    {
+                        "name": "test_builder",
+                        "sources": ["source.builder_source_type.builder_source_name"],
+                        "provisioner": [{"test_provisioner": {}}],
+                        "post-processors": [{"post-processor": {"test_post_processor": [{}]}}],
+                    }
+                ]
+            },
+        )
 
     def test_load_builder_empty_with_name(self):
         self.assertEqual(Builder.load_builder({}, name="test_builder"), Builder("test_builder"))
@@ -372,26 +396,18 @@ class TestBuilder(BasePackerTest):
             Builder.load_builder({})
 
     def test_load_builder_valid_config(self):
-        actual = Builder.load_builder({
-            "build": [
-                {
-                    "name": "test_builder",
-                    "sources": ["source.empty.builder_source_name"],
-                    "provisioner": [
-                        {
-                            "empty": {}
-                        }
-                    ],
-                    "post-processors": [
-                        {
-                            "post-processor": {
-                                "empty": [{}]
-                            }
-                        }
-                    ]
-                }
-            ]
-        })
+        actual = Builder.load_builder(
+            {
+                "build": [
+                    {
+                        "name": "test_builder",
+                        "sources": ["source.empty.builder_source_name"],
+                        "provisioner": [{"empty": {}}],
+                        "post-processors": [{"post-processor": {"empty": [{}]}}],
+                    }
+                ]
+            }
+        )
         expected = Builder("test_builder")
         expected.add_source(EmptyBuilderSourceConfig("builder_source_name"))
         expected.add_provisioner(EmptyProvisioner())
@@ -403,8 +419,10 @@ class TestPackerConfig(BasePackerTest):
     def setUp(self):
         self.config = PackerConfig("test_config")
         self.config.requirements.add_plugin(Plugin("test_plugin", "1.0.1", "=", "github.com/user/repo"))
-        self.config.add_builder_source(BuilderSourceConfig("test_bsc_type_1", "test_bsc_name_1"),
-                                       BuilderSourceConfig("test_bsc_type_2", "test_bsc_name_2"))
+        self.config.add_builder_source(
+            BuilderSourceConfig("test_bsc_type_1", "test_bsc_name_1"),
+            BuilderSourceConfig("test_bsc_type_2", "test_bsc_name_2"),
+        )
         self.config.builder.add_provisioner(Provisioner("test_provisioner"))
         self.config.builder.add_post_processor(PostProcessor("test_post_processor"))
 
@@ -415,53 +433,26 @@ class TestPackerConfig(BasePackerTest):
         self.assertFalse(self.config.is_empty())
 
     def test_json(self):
-        self.assertDictEqual(self.config.json(), {
-            "packer": [
-                {
-                    "required_plugins": [
-                        {
-                            "test_plugin": {
-                                "version": "= 1.0.1",
-                                "source": "github.com/user/repo"
-                            }
-                        }
-                    ]
-                }
-            ],
-            "source": [
-                {
-                    "test_bsc_type_1": {
-                        "test_bsc_name_1": {}
+        self.assertDictEqual(
+            self.config.json(),
+            {
+                "packer": [
+                    {"required_plugins": [{"test_plugin": {"version": "= 1.0.1", "source": "github.com/user/repo"}}]}
+                ],
+                "source": [{"test_bsc_type_1": {"test_bsc_name_1": {}}}, {"test_bsc_type_2": {"test_bsc_name_2": {}}}],
+                "build": [
+                    {
+                        "name": "test_config",
+                        "sources": [
+                            "source.test_bsc_type_1.test_bsc_name_1",
+                            "source.test_bsc_type_2.test_bsc_name_2",
+                        ],
+                        "provisioner": [{"test_provisioner": {}}],
+                        "post-processors": [{"post-processor": {"test_post_processor": [{}]}}],
                     }
-                },
-                {
-                    "test_bsc_type_2": {
-                        "test_bsc_name_2": {}
-                    }
-                }
-            ],
-            "build": [
-                {
-                    "name": "test_config",
-                    "sources": [
-                        "source.test_bsc_type_1.test_bsc_name_1",
-                        "source.test_bsc_type_2.test_bsc_name_2",
-                    ],
-                    "provisioner": [
-                        {
-                            "test_provisioner": {}
-                        }
-                    ],
-                    "post-processors": [
-                        {
-                            "post-processor": {
-                                "test_post_processor": [{}]
-                            }
-                        }
-                    ]
-                }
-            ]
-        })
+                ],
+            },
+        )
 
     def test_load_config(self):
         config_data = {
@@ -477,21 +468,15 @@ class TestPackerConfig(BasePackerTest):
                     ]
                 }
             ],
-            "source": [
-                {
-                    "empty": {
-                        "test_bsc_name_1": {}
-                    }
-                }
-            ],
+            "source": [{"empty": {"test_bsc_name_1": {}}}],
             "build": [
                 {
                     "name": "test_config",
                     "sources": ["source.empty.test_bsc_name_1"],
                     "provisioner": [{"empty": {}}],
-                    "post-processors": [{"post-processor": {"empty": [{}]}}]
+                    "post-processors": [{"post-processor": {"empty": [{}]}}],
                 }
-            ]
+            ],
         }
         expected = PackerConfig("test_config")
         expected.requirements.add_plugin(Plugin("test_plugin", "1.0.1", "=", "github.com/user/repo"))
@@ -501,9 +486,3 @@ class TestPackerConfig(BasePackerTest):
         expected.builder.add_post_processor(EmptyPostProcessor())
         actual = PackerConfig.load_config("test_config", config_content=config_data)
         self.assertEqual(actual, expected)
-
-
-
-
-
-
