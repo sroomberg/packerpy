@@ -20,7 +20,7 @@ classifiers = [
 ]
 dependencies = [
     "python-hcl2~=3.0",
-    "typing_extensions>=4.0; python_version < '3.12'",
+    "typing_extensions>=4.0", # not required
 ]
 
 [project.urls]

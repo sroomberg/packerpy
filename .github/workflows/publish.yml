@@ -1,24 +1,42 @@
-name: Bump Version & Publish to PyPI
+name: Publish to PyPI
 
 on:
-  pull_request:
-    types: [closed]
-    branches: [master]
+  push:
+    branches:
+      - master
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  publish:
-    if: github.event.pull_request.merged == true
+  check:
     runs-on: ubuntu-latest
-
+    outputs:
+      on_master: ${{ steps.verify.outputs.on_master }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if commit has a version tag
+        id: verify
+        run: |
+          TAG=$(git tag --points-at HEAD | grep -E '^v[0-9]' | head -n1)
+          if [ -n "$TAG" ]; then
+            echo "on_master=true" >> $GITHUB_OUTPUT
+          else
+            echo "on_master=false" >> $GITHUB_OUTPUT
+          fi
+
+  publish:
+    needs: check
+    if: needs.check.outputs.on_master == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -26,61 +44,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install dependencies
-        run: pip install build twine tomli tomli-w
-
-      - name: Determine version bump type
-        id: bump
-        run: |
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          PR_LABELS=$(echo '${{ toJson(github.event.pull_request.labels.*.name) }}')
-
-          if echo "$PR_LABELS" | grep -q '"major"'; then
-            echo "part=major" >> "$GITHUB_OUTPUT"
-          elif echo "$PR_LABELS" | grep -q '"minor"'; then
-            echo "part=minor" >> "$GITHUB_OUTPUT"
-          else
-            echo "part=patch" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Bump version
-        id: version
-        run: |
-          python - <<'PYEOF'
-          import tomli, tomli_w, pathlib, os
-
-          pyproject = pathlib.Path("pyproject.toml")
-          data = tomli.loads(pyproject.read_text())
-
-          current = data["project"]["version"]
-          major, minor, patch = (int(x) for x in current.split("."))
-
-          part = os.environ["BUMP_PART"]
-          if part == "major":
-              major, minor, patch = major + 1, 0, 0
-          elif part == "minor":
-              minor, patch = minor + 1, 0
-          else:
-              patch += 1
-
-          new_version = f"{major}.{minor}.{patch}"
-          data["project"]["version"] = new_version
-          pyproject.write_text(tomli_w.dumps(data))
-
-          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"new_version={new_version}\n")
-
-          print(f"Bumped {current} -> {new_version}")
-          PYEOF
-        env:
-          BUMP_PART: ${{ steps.bump.outputs.part }}
-
-      - name: Commit version bump
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add pyproject.toml
-          git commit -m "bump version to ${{ steps.version.outputs.new_version }}"
-          git push
+        run: pip install build twine
 
       - name: Build package
         run: python -m build
@@ -90,8 +54,3 @@ jobs:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: twine upload dist/*
-
-      - name: Create git tag
-        run: |
-          git tag "v${{ steps.version.outputs.new_version }}"
-          git push origin "v${{ steps.version.outputs.new_version }}"
