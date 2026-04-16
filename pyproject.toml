@@ -23,6 +23,9 @@ dependencies = [
     "typing_extensions>=4.0",
 ]
 
+[project.optional-dependencies]
+test = ["coverage>=7.0"]
+
 [project.urls]
 Homepage = "https://github.com/sroomberg/packerpy"
 Repository = "https://github.com/sroomberg/packerpy"
