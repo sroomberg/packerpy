@@ -521,9 +521,77 @@ class DockerBuilder(BuilderSourceConfig):
         os.environ.update({k: str(v) for k, v in flags.items()})
 
 
+class AzureArmBuilder(BuilderSourceConfig):
+    """Azure Resource Manager (ARM) image builder source.
+
+    See: https://developer.hashicorp.com/packer/plugins/builders/azure/arm
+
+    Service principal authentication uses *client_id*, *client_secret*, and
+    *tenant_id* together; omit all three to use Managed Identity instead.
+
+    Args:
+        name: Unique source name.
+        subscription_id: Azure subscription ID.
+        location: Azure region to build in (e.g. ``"East US"``).
+        image_publisher: Publisher of the base marketplace image (e.g. ``"Canonical"``).
+        image_offer: Offer of the base marketplace image (e.g. ``"UbuntuServer"``).
+        image_sku: SKU of the base marketplace image (e.g. ``"22.04-LTS"``).
+        **kwargs: Optional parameters — see Packer docs for the full list.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        subscription_id: str,
+        location: str,
+        image_publisher: str,
+        image_offer: str,
+        image_sku: str,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__("azure-arm", name)
+        self.subscription_id: str = subscription_id
+        self.location: str = location
+        self.image_publisher: str = image_publisher
+        self.image_offer: str = image_offer
+        self.image_sku: str = image_sku
+        self.image_version: str = kwargs.get("image_version", "latest")
+        # Service principal auth — all three must be provided together or not at all
+        self.client_id: str | None = kwargs.get("client_id", None)
+        self.client_secret: str | None = kwargs.get("client_secret", None)
+        self.tenant_id: str | None = kwargs.get("tenant_id", None)
+        PackerResource.check_inclusive_inputs(
+            client_id=self.client_id, client_secret=self.client_secret, tenant_id=self.tenant_id
+        )
+        self.managed_image_name: str | None = kwargs.get("managed_image_name", None)
+        self.managed_image_resource_group_name: str | None = kwargs.get("managed_image_resource_group_name", None)
+        PackerResource.check_inclusive_inputs(
+            managed_image_name=self.managed_image_name,
+            managed_image_resource_group_name=self.managed_image_resource_group_name,
+        )
+        self.os_type: str | None = kwargs.get("os_type", None)
+        self.vm_size: str | None = kwargs.get("vm_size", None)
+        self.os_disk_size_gb: int | None = kwargs.get("os_disk_size_gb", None)
+        self.azure_tags: dict[str, str] = kwargs.get("azure_tags", {})
+        self.temp_resource_group_name: str | None = kwargs.get("temp_resource_group_name", None)
+        self.virtual_network_name: str | None = kwargs.get("virtual_network_name", None)
+        self.virtual_network_subnet_name: str | None = kwargs.get("virtual_network_subnet_name", None)
+        self.virtual_network_resource_group_name: str | None = kwargs.get(
+            "virtual_network_resource_group_name", None
+        )
+        PackerResource.check_inclusive_inputs(
+            virtual_network_name=self.virtual_network_name,
+            virtual_network_subnet_name=self.virtual_network_subnet_name,
+            virtual_network_resource_group_name=self.virtual_network_resource_group_name,
+        )
+        self.ssh_username: str | None = kwargs.get("ssh_username", None)
+        self.winrm_username: str | None = kwargs.get("winrm_username", None)
+
+
 BUILDER_SOURCE_CONFIG_LOOKUP: dict[str, type[BuilderSourceConfig]] = {
     "empty": EmptyBuilderSourceConfig,
     "amazon-ebs": AmazonEbs,
+    "azure-arm": AzureArmBuilder,
     "googlecompute": GoogleComputeBuilder,
     "docker": DockerBuilder,
 }

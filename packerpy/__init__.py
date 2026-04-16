@@ -20,6 +20,7 @@ from packerpy.client import PackerClient
 from packerpy.exceptions import PackerBuildError, PackerClientError
 from packerpy.models import (
     AmazonEbs,
+    AzureArmBuilder,
     Builder,
     BuilderResource,
     BuilderSourceConfig,
@@ -46,6 +47,7 @@ from packerpy.models import (
 
 __all__ = [
     "AmazonEbs",
+    "AzureArmBuilder",
     "Builder",
     "BuilderResource",
     "BuilderSourceConfig",
