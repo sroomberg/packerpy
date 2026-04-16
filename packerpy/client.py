@@ -97,8 +97,8 @@ class PackerClient:
             EnvironmentError: If Packer is not installed or not on the path.
         """
         try:
-            subprocess.check_call("packer version")
-        except subprocess.CalledProcessError:
+            subprocess.check_call(["packer", "version"])
+        except (subprocess.CalledProcessError, FileNotFoundError):
             raise EnvironmentError(
                 "Please install packer (https://developer.hashicorp.com/packer/downloads) before using this tool."
             )
