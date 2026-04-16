@@ -1,6 +1,13 @@
+import json
+import os
+import subprocess
+import tempfile
 import unittest
+from unittest.mock import MagicMock, patch
 
-from packerpy.exceptions import PackerBuildError
+from packerpy.builder import PackerBuilder
+from packerpy.client import PackerClient
+from packerpy.exceptions import PackerBuildError, PackerClientError
 from packerpy.models import (
     AmazonEbs,
     Builder,
@@ -486,3 +493,142 @@ class TestPackerConfig(BasePackerTest):
         expected.builder.add_post_processor(EmptyPostProcessor())
         actual = PackerConfig.load_config("test_config", config_content=config_data)
         self.assertEqual(actual, expected)
+
+
+class _ConcreteBuilder(PackerBuilder):
+    """Minimal concrete subclass for testing PackerBuilder."""
+
+    def configure(self) -> None:
+        pass
+
+
+class TestPackerClient(BasePackerTest):
+    def setUp(self):
+        with patch.object(PackerClient, "verify_packer_installation"):
+            self.client = PackerClient("test.pkr.json")
+
+    def test_invalid_command_raises_error(self):
+        with self.assertRaises(PackerClientError):
+            self.client.run("notacommand")
+
+    def test_run_returns_process(self):
+        mock_proc = MagicMock()
+        mock_proc.stdout = []
+        mock_proc.returncode = 0
+        with patch("packerpy.client.subprocess.Popen", return_value=mock_proc):
+            result = self.client.run("validate")
+        self.assertIs(result, mock_proc)
+
+    def test_run_streams_output_to_logger(self):
+        mock_proc = MagicMock()
+        mock_proc.stdout = ["line1\n", "line2\n"]
+        mock_proc.returncode = 0
+        with patch("packerpy.client.subprocess.Popen", return_value=mock_proc):
+            with self.assertLogs("PackerClient", level="INFO") as cm:
+                self.client.run("validate")
+        self.assertIn("INFO:PackerClient:line1", cm.output)
+        self.assertIn("INFO:PackerClient:line2", cm.output)
+
+    def test_run_writes_stream_file(self):
+        mock_proc = MagicMock()
+        mock_proc.stdout = ["line1\n"]
+        mock_proc.returncode = 0
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with patch.object(PackerClient, "verify_packer_installation"):
+                client = PackerClient("test.pkr.json", stream_file_dir=tmpdir)
+            with patch("packerpy.client.subprocess.Popen", return_value=mock_proc):
+                client.run("validate")
+            log_path = os.path.join(tmpdir, "packer-validate.log")
+            self.assertTrue(os.path.exists(log_path))
+            with open(log_path) as f:
+                self.assertEqual(f.read(), "line1\n")
+
+    def test_verify_packer_installation_success(self):
+        with patch("packerpy.client.subprocess.check_call") as mock_check:
+            PackerClient.verify_packer_installation()
+            mock_check.assert_called_once_with(["packer", "version"])
+
+    def test_verify_packer_not_installed_called_process_error(self):
+        with patch("packerpy.client.subprocess.check_call", side_effect=subprocess.CalledProcessError(1, "packer")):
+            with self.assertRaises(EnvironmentError):
+                PackerClient.verify_packer_installation()
+
+    def test_verify_packer_not_installed_file_not_found(self):
+        with patch("packerpy.client.subprocess.check_call", side_effect=FileNotFoundError):
+            with self.assertRaises(EnvironmentError):
+                PackerClient.verify_packer_installation()
+
+
+class TestPackerBuilder(BasePackerTest):
+    def setUp(self):
+        with patch("packerpy.builder.PackerClient"):
+            self.builder = _ConcreteBuilder("test-build")
+        self.mock_client = self.builder.client
+
+    def _make_proc(self, returncode: int = 0) -> MagicMock:
+        proc = MagicMock()
+        proc.returncode = returncode
+        return proc
+
+    def test_artifact_exists_no_file(self):
+        self.builder.manifest_file = "/nonexistent/path/manifest.json"
+        self.assertFalse(self.builder.artifact_exists())
+
+    def test_artifact_exists_with_artifact(self):
+        manifest = {"builds": [{"artifact_id": "ami-12345"}]}
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json.dump(manifest, f)
+            self.builder.manifest_file = f.name
+        try:
+            self.assertTrue(self.builder.artifact_exists())
+        finally:
+            os.unlink(self.builder.manifest_file)
+
+    def test_artifact_exists_without_artifact_id(self):
+        manifest = {"builds": [{}]}
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json.dump(manifest, f)
+            self.builder.manifest_file = f.name
+        try:
+            self.assertFalse(self.builder.artifact_exists())
+        finally:
+            os.unlink(self.builder.manifest_file)
+
+    def test_build_init_failure_raises_error(self):
+        self.mock_client.run.return_value = self._make_proc(returncode=1)
+        with self.assertRaises(PackerBuildError):
+            self.builder.build()
+
+    def test_build_validate_failure_raises_error(self):
+        def run_side_effect(command, *args):
+            return self._make_proc(returncode=0 if command == "init" else 1)
+
+        self.mock_client.run.side_effect = run_side_effect
+        with self.assertRaises(PackerBuildError):
+            self.builder.build()
+
+    def test_build_failure_raises_error(self):
+        def run_side_effect(command, *args):
+            return self._make_proc(returncode=0 if command in ("init", "validate") else 1)
+
+        self.mock_client.run.side_effect = run_side_effect
+        self.builder.manifest_file = "/nonexistent/manifest.json"
+        with self.assertRaises(PackerBuildError):
+            self.builder.build()
+
+    def test_build_no_artifact_raises_error(self):
+        self.mock_client.run.return_value = self._make_proc(returncode=0)
+        self.builder.manifest_file = "/nonexistent/manifest.json"
+        with self.assertRaises(PackerBuildError):
+            self.builder.build()
+
+    def test_build_success(self):
+        self.mock_client.run.return_value = self._make_proc(returncode=0)
+        manifest = {"builds": [{"artifact_id": "ami-12345"}]}
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+            json.dump(manifest, f)
+            self.builder.manifest_file = f.name
+        try:
+            self.builder.build()  # should not raise
+        finally:
+            os.unlink(self.builder.manifest_file)
