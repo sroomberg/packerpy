@@ -4,13 +4,16 @@ on:
   pull_request:
     types: [closed]
     branches: [master]
+  push:
+    tags:
+      - "v*"
 
 permissions:
   contents: write
 
 jobs:
   publish:
-    if: github.event.pull_request.merged == true
+    if: github.event.pull_request.merged == true || startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
 
     steps:
@@ -30,6 +33,7 @@ jobs:
 
       - name: Determine version bump type
         id: bump
+        if: github.event_name == 'pull_request'
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
           PR_LABELS=$(echo '${{ toJson(github.event.pull_request.labels.*.name) }}')
@@ -44,6 +48,7 @@ jobs:
 
       - name: Bump version
         id: version
+        if: github.event_name == 'pull_request'
         run: |
           python - <<'PYEOF'
           import tomli, tomli_w, pathlib, os
@@ -75,6 +80,7 @@ jobs:
           BUMP_PART: ${{ steps.bump.outputs.part }}
 
       - name: Commit version bump
+        if: github.event_name == 'pull_request'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -92,6 +98,7 @@ jobs:
         run: twine upload dist/*
 
       - name: Create git tag
+        if: github.event_name == 'pull_request'
         run: |
           git tag "v${{ steps.version.outputs.new_version }}"
           git push origin "v${{ steps.version.outputs.new_version }}"
