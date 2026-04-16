@@ -80,10 +80,12 @@ class PackerBuilder:
             PackerBuildError: If validation fails or no artifact is produced.
         """
         self.add_manifest_post_processor()
-        self.client.run("init")
+        if self.client.run("init").returncode != 0:
+            raise PackerBuildError("Packer init failed")
         if self.client.run("validate").returncode != 0:
             raise PackerBuildError("Invalid packer template")
-        self.client.run("build")
+        if self.client.run("build").returncode != 0:
+            raise PackerBuildError("Packer build failed")
         self.log.info(f"Checking manifest {self.manifest_file} for created artifact(s)")
         if not self.artifact_exists():
             raise PackerBuildError(
