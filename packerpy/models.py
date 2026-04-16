@@ -576,9 +576,7 @@ class AzureArmBuilder(BuilderSourceConfig):
         self.temp_resource_group_name: str | None = kwargs.get("temp_resource_group_name", None)
         self.virtual_network_name: str | None = kwargs.get("virtual_network_name", None)
         self.virtual_network_subnet_name: str | None = kwargs.get("virtual_network_subnet_name", None)
-        self.virtual_network_resource_group_name: str | None = kwargs.get(
-            "virtual_network_resource_group_name", None
-        )
+        self.virtual_network_resource_group_name: str | None = kwargs.get("virtual_network_resource_group_name", None)
         PackerResource.check_inclusive_inputs(
             virtual_network_name=self.virtual_network_name,
             virtual_network_subnet_name=self.virtual_network_subnet_name,
