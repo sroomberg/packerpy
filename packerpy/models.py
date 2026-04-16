@@ -414,6 +414,63 @@ class AmazonEbs(BuilderSourceConfig):
             return PackerResource.all_defined_items(self.__dict__)
 
 
+class GoogleComputeBuilder(BuilderSourceConfig):
+    """Google Compute Engine image builder source.
+
+    See: https://developer.hashicorp.com/packer/plugins/builders/googlecompute
+
+    Exactly one of *source_image* or *source_image_family* must be provided.
+
+    Args:
+        name: Unique source name.
+        project_id: GCP project ID to build in.
+        zone: GCP zone to run the build instance in (e.g. ``"us-central1-a"``).
+        source_image: Exact source image name to use as the base.
+        source_image_family: Image family to resolve to the latest non-deprecated image.
+        **kwargs: Optional parameters — see Packer docs for the full list.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        project_id: str,
+        zone: str,
+        source_image: str | None = None,
+        source_image_family: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__("googlecompute", name)
+        PackerResource.check_exclusive_inputs(source_image=source_image, source_image_family=source_image_family)
+        self.project_id: str = project_id
+        self.zone: str = zone
+        self.source_image: str | None = source_image
+        self.source_image_family: str | None = source_image_family
+        self.image_name: str | None = kwargs.get("image_name", None)
+        self.image_family: str | None = kwargs.get("image_family", None)
+        self.image_description: str | None = kwargs.get("image_description", None)
+        self.image_labels: dict[str, str] = kwargs.get("image_labels", {})
+        self.machine_type: str | None = kwargs.get("machine_type", None)
+        self.disk_size: int | None = kwargs.get("disk_size", None)
+        self.disk_type: str | None = kwargs.get("disk_type", None)
+        self.network: str | None = kwargs.get("network", None)
+        self.subnetwork: str | None = kwargs.get("subnetwork", None)
+        self.tags: list[str] = kwargs.get("tags", [])
+        self.ssh_username: str | None = kwargs.get("ssh_username", None)
+        self.service_account_email: str | None = kwargs.get("service_account_email", None)
+        self.scopes: list[str] = kwargs.get("scopes", [])
+        self.credentials_file: str | None = kwargs.get("credentials_file", None)
+        self.access_token: str | None = kwargs.get("access_token", None)
+        if self.credentials_file and self.access_token:
+            raise ValueError("Provide at most one of credentials_file or access_token")
+        self.metadata: dict[str, str] = kwargs.get("metadata", {})
+        self.startup_script_file: str | None = kwargs.get("startup_script_file", None)
+        self.preemptible: bool = kwargs.get("preemptible", False)
+        self.omit_external_ip: bool = kwargs.get("omit_external_ip", False)
+        self.on_host_maintenance: str | None = kwargs.get("on_host_maintenance", None)
+        self.use_iap: bool = kwargs.get("use_iap", False)
+        self.use_os_login: bool = kwargs.get("use_os_login", False)
+
+
 class DockerBuilder(BuilderSourceConfig):
     """Docker image builder source.
 
@@ -467,6 +524,7 @@ class DockerBuilder(BuilderSourceConfig):
 BUILDER_SOURCE_CONFIG_LOOKUP: dict[str, type[BuilderSourceConfig]] = {
     "empty": EmptyBuilderSourceConfig,
     "amazon-ebs": AmazonEbs,
+    "googlecompute": GoogleComputeBuilder,
     "docker": DockerBuilder,
 }
 
