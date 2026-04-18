@@ -47,7 +47,7 @@ class PackerClient:
         self.stream_file_dir: str | None = stream_file_dir
         self.log: logging.Logger = log or logging.getLogger(PackerClient.__name__)
 
-    def run(self, command: str, *args: str) -> "subprocess.Popen[str]":
+    def run(self, command: str, *args: str) -> subprocess.Popen[str]:
         """Execute a Packer CLI command.
 
         Args:
