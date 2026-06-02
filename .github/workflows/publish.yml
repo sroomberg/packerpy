@@ -104,15 +104,27 @@ jobs:
           git tag "v${{ steps.version.outputs.new_version }}"
           git push origin "v${{ steps.version.outputs.new_version }}"
 
-      - name: Create GitHub release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract release notes
+        id: notes
         run: |
           if [ "${{ github.event_name }}" = "push" ]; then
             VERSION="${{ github.ref_name }}"
           else
             VERSION="v${{ steps.version.outputs.new_version }}"
           fi
-          gh release create "$VERSION" dist/* \
-            --title "$VERSION" \
-            --generate-notes
+          # Extract the section for this version from CHANGES.md
+          NOTES=$(awk "/^## ${VERSION}$/{found=1; next} /^## /{if(found) exit} found{print}" CHANGES.md)
+          if [ -z "$NOTES" ]; then
+            NOTES="Release ${VERSION}"
+          fi
+          # Write to file to avoid quoting issues
+          echo "$NOTES" > /tmp/release-notes.md
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.notes.outputs.version }}" dist/* \
+            --title "${{ steps.notes.outputs.version }}" \
+            --notes-file /tmp/release-notes.md
